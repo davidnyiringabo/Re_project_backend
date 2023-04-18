@@ -12,6 +12,8 @@ const multer = require("multer");
 const bodyParser = require("body-parser");
 const protect = require("./middlewares/userAuth");
 const documentRouter = require("./routes/documents.routes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger.json");
 
 const conn = mysql.createConnection({
   host: "localhost",
@@ -26,6 +28,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Connect database
 connectDatabase(); // MongoDB
 connectDB(); // MySQL
+
+// Swagger documentation
+
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 /* Upload a document
    ----------------- */
@@ -48,7 +54,6 @@ const upload = multer({ storage: storage }).single("file");
 
 app.post("/api/docs/:user/create", protect, (req, res) => {
   if (!user) return res.status(400).send({ message: "User not found!" });
-
   if (user.name !== req.params.user)
     return res.status(404).send({ message: "Cannot perform this action!" });
   // upload a word document
@@ -76,14 +81,19 @@ app.post("/api/docs/:user/create", protect, (req, res) => {
         console.log(err);
         return res.status(400).send({ message: "Error saving to database" });
       }
-      console.log(result);
-      res.send({ message: "File uploaded successfully" });
+      const sql = `SELECT * FROM documents WHERE reporter='${user.name}'`;
+      conn.query(sql, async (err, data) => {
+        if (err)
+          return res.status(500).send({ message: "Internal server error..." });
+        if (data.length === 0)
+          return res.status(400).send({ message: "Document not found!" });
+        res.send({ doc: data, message: "File uploaded successfully" });
+      });
     });
   });
 });
 
-
-app.use('/api/docs', documentRouter)
+app.use("/api/docs", documentRouter);
 
 // Use cors
 app.use(cors());
@@ -105,6 +115,6 @@ app.use("/api/currency", currencyRouter);
 // Room chat apis
 app.use("/api/chat", require("./routes/chat.routes"));
 
-app.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, () => {
   console.log(`server listening port ${process.env.PORT}`);
 });

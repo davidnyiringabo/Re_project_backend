@@ -1,58 +1,62 @@
-const ChatRoom = require("../models/ChatRoom/chat.room.model");
+// const { Chat } = require("../models/chat.Model");
 
-const createRoom = async(rq, rs) => {
-    if(!user) return res.status(401).send({message: 'User not found!'})
-    try {
-        const {name} = rq.body;
-        if(!name) return rs.status(400).send({message: 'Chatroom name is required'})
-        const createdBy = user.name;
-        const newRoom = await ChatRoom.create({ name, createdBy });
-        const roomId = newRoom._id;
+const Chat = require("../models/chat.Model");
 
-        const message = "Chat room created successfully.";
-        return rs.status(201).json({ roomId, message });
-    } catch (error) {
-        console.log(error)
-        return rs.status(500).send({message: 'Error creating room'})
-    }
-}
+const accessChat = async (req, res) => {
+  const { userNum } = req.body;
+  if (!userNum) return res.status(400).send({ message: "No user number!" });
+  let isChat = await Chat.find({
+    isGroupChat: false,
+    $and: [
+      { users: { $elemMatch: { $eq: user.number } } },
+      { users: { $elemMatch: { $eq: userNum } } },
+    ],
+  });
 
+  if (isChat.length === 0) {
+    const name = user.name;
+    // Create a new chat
+    const newChat = new Chat({
+      users: [user.number, userNum],
+      groupAdmin: user.number,
+    });
+    await newChat.save();
+    isChat = newChat;
+    return res.status(200).send({ chat: isChat });
+  }
 
-const getRooms = async(rq, rs) => {
-    console.log('get rooms')
-}
+  return res.status(200).send({ chat: isChat });
+};
 
+const fetchChats = async (req, res) => {
+  try {
+    const chats = await Chat.find({
+      users: { $elemMatch: { $eq: user.number } },
+    }).sort({ updatedAt: -1 });
 
-const getRoomById = async(rq, rs)=> {
-    console.log('Get room by id')
-}
+    if (chats.length === 0)
+      return res.status(400).send({ message: "No chats found!" });
 
+    return res.status(200).send(chats);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({ message: "Internal server error..." });
+  }
+};
 
-const joinRoom = async(rq, rs) => {
-    console.log('Join room')
-}
+const createGroupChat = async (req, res) => {};
 
+const renameGroup = async (req, res) => {};
 
-const leaveRoom = async(rq, rs) => {
-    console.log('Leave room')
-}
+const removeFromGroup = async (req, res) => {};
 
-const getRoomMessages = async(rq, rs) => {
-    console.log('Get room messages')
-}
-
-const sendMessage = async(rq, rs) => {
-    console.log('Send message')
-}
-
-
+const addToGroup = async (req, res) => {};
 
 module.exports = {
-    createRoom,
-    getRooms,
-    getRoomById,
-    joinRoom,
-    leaveRoom,
-    getRoomMessages,
-    sendMessage
-}
+  accessChat,
+  renameGroup,
+  addToGroup,
+  fetchChats,
+  createGroupChat,
+  removeFromGroup,
+};

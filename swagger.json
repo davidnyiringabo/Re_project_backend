@@ -1,0 +1,833 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Re_Pro",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "users",
+      "description": "Operations about users."
+    },
+    {
+      "name": "documents",
+      "description": "Operations about documents"
+    },
+    {
+      "name": "currency",
+      "description": "Operations about currency"
+    }
+  ],
+  "paths": {
+    "/api/users/register": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Register user",
+        "description": "Signing up the user",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "irumvaregis@gmail.com"
+              },
+              "number": {
+                "type": "string",
+                "example": "0780000000"
+              },
+              "password": {
+                "type": "string",
+                "example": "irumvaregis"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "user updated",
+            "token": "token"
+          }
+        }
+      }
+    },
+
+    "/api/users/login": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Login user",
+        "description": "Logging in the user",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "irumvaregis@gmail.com"
+              },
+              "password": {
+                "type": "string",
+                "example": "irumvaregis"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "user logged in",
+            "token": "token"
+          }
+        }
+      }
+    },
+
+    "/api/users/register/verify": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Verify user number",
+        "description": "Verifying the user number",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "properties": {
+              "number": {
+                "type": "string",
+                "example": "0780000000"
+              },
+              "code": {
+                "type": "string",
+                "example": "123456"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "user verified",
+            "token": "token"
+          }
+        }
+      }
+    },
+
+    "/api/users/password/forgot": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Forgot password",
+        "description": "Forgot password",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "properties": {
+              "number": {
+                "type": "string",
+                "example": "+250780000000"
+              }
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "password reset code sent"
+          }
+        }
+      }
+    },
+
+    "/api/users/password/reset": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Reset password",
+        "description": "Password reset",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": "true",
+            "properties": {
+              "otp": {
+                "type": "string"
+              },
+              "number": {
+                "type": "string",
+                "example": "+250780000000"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          }
+        }
+      }
+    },
+
+    "/api/users/auth/google": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Log user using google account",
+        "description": "Signing in the user by google account",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "securityDefinitions": {
+          "google_auth": {
+            "type": "oauth2",
+            "authorizationUrl": "https://accounts.google.com/o/oauth2/auth",
+            "flow": "implicit",
+            "scopes": {
+              "openid": "Access user's basic profile information",
+              "email": "Access user's email address",
+              "profile": "Access user's full name and profile information"
+            }
+          }
+        },
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User signed up successfully"
+          }
+        }
+      }
+    },
+
+    "/api/users/workers": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Getting all users",
+        "description": "Getting user info",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "responses": {
+          "200": {
+            "description": "Users info"
+          }
+        }
+      }
+    },
+
+    "/api/users/workers/pastors": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Pastor users",
+        "description": "Getting only pastors",
+        "produces": "application/json",
+        "responses": {
+          "200": {
+            "description": "Pastors"
+          }
+        }
+      }
+    },
+
+    "/api/users/{user}/my/profile": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Get my user profile",
+        "description": "Getting my own profile",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile stats"
+          }
+        }
+      }
+    },
+
+    "/api/users/{user}/profile": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Getting any user profile",
+        "consumes": "application/json",
+        "produces": "application/json",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All users stats"
+          }
+        }
+      }
+    },
+
+    "/api/users/{user}/profile/photo/remove": {
+      "put": {
+        "tags": ["users"],
+        "summary": "Remove profile pic",
+        "description": "Removing profile pic from user identified by unique id",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": "true",
+            "properties": {
+              "password": {
+                "type": "string",
+                "example": "thisisapassword"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed profile pic"
+          }
+        }
+      }
+    },
+
+    "/api/users/{user}/profile/update": {
+      "put": {
+        "tags": ["users"],
+        "summary": "Update user profile",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "regis"
+              },
+              "church": {
+                "type": "string",
+                "example": "karongi"
+              },
+              "position": {
+                "type": "string",
+                "example": "pastor"
+              },
+              "number": {
+                "type": "string",
+                "example": "+250876564567"
+              },
+              "email": {
+                "type": "string",
+                "example": "irumvaregis@gmail.com"
+              },
+              "password": {
+                "type": "string",
+                "example": "irumvaregis"
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "User stats updated"
+          }
+        }
+      }
+    },
+
+    "/api/users/{user}/profile/password/change": {
+      "put": {
+        "tags": ["users"],
+        "summary": "Changing user password",
+        "consumes": "application/json",
+        "produces": "application/json",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "properties": {
+              "newPassword": {
+                "type": "string",
+                "example": "regisirumva"
+              },
+              "oldPassword": {
+                "type": "string",
+                "example": "irumvaregis"
+              },
+              "confirmPass": {
+                "type": "string",
+                "example": "irumvaregis"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update the user password"
+          }
+        }
+      }
+    },
+
+    "/api/users/register/update": {
+      "put": {
+        "tags": ["users"],
+        "summary": "Update user stats",
+        "description": "Update user stats",
+        "produces": "application/json",
+        "consumes": "application/json",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": "true",
+            "properties": {
+              "position": {
+                "type": "string",
+                "example": "pastor"
+              },
+              "church": {
+                "type": "string",
+                "example": "karongi"
+              },
+              "language": {
+                "type": "string",
+                "example": "Kinyarwanda"
+              },
+              "idNumber": {
+                "type": "string",
+                "example": "345"
+              }
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User stats updated successfully"
+          }
+        }
+      }
+    },
+
+    "/api/users/{user}/profile/delete": {
+      "delete": {
+        "tags": ["users"],
+        "summary": "Changing user password",
+        "consumes": "application/json",
+        "produces": "application/json",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "properties": {
+              "password": {
+                "type": "string",
+                "example": "irumvaregis"
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "User account deleted"
+          }
+        }
+      }
+    },
+
+    "/api/currency/create": {
+      "post": {
+        "tags": ["currency"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Create a fund",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "properties": {
+              "totalAmount": {
+                "type": "string",
+                "example": "123456"
+              },
+              "expenses": {
+                "type": "string",
+                "example": "1234"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created fund"
+          }
+        }
+      }
+    },
+
+    "/api/currency/funds": {
+      "get": {
+        "tags": ["currency"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Get all funds",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User's funds fetched"
+          }
+        }
+      }
+    },
+
+    "/api/currency/{me}/funds": {
+      "put": {
+        "tags": ["currency"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "description": "Get my funds",
+        "summary": "get my funds",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "me",
+            "description": "user name"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "properties": {
+              "totalAmount": {
+                "type": "string",
+                "example": "123456"
+              },
+              "expenses": {
+                "type": "string",
+                "example": "1234"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User funds updated"
+          }
+        }
+      }
+    },
+
+    "/api/docs/{user}/create": {
+      "post": {
+        "tags": ["documents"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Upload a doc",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          },
+          {
+            "in": "formData",
+            "name": "receiver",
+            "type": "string",
+            "required": "true"
+          },
+          {
+            "in": "formData",
+            "name": "details",
+            "type": "string",
+            "required": "true",
+            "example": "These are the reports"
+          },
+          {
+            "in": "formData",
+            "name": "church",
+            "type": "string",
+            "required": "true",
+            "example": "Kigali"
+          },
+          {
+            "in": "formData",
+            "name": "subject",
+            "type": "string",
+            "required": "true",
+            "example": "reports"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "The document file to upload",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document created"
+          }
+        }
+      }
+    },
+
+    "/api/docs/{me}/docs/sent": {
+      "get": {
+        "tags": ["documents"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Get my sent docs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "me",
+            "description": "user name"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "These are your docs"
+          }
+        }
+      }
+    },
+    "/api/docs/{me}/docs/received": {
+      "get": {
+        "tags": ["documents"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Get my sent docs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "me",
+            "description": "user name"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "These are your docs"
+          }
+        }
+      }
+    },
+
+    "/api/docs/all/docs": {
+      "get": {
+        "tags": ["documents"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Get all church docs",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "getting all church docs"
+          }
+        }
+      }
+    },
+
+    "/api/docs/{user}/doc/{id}/delete": {
+      "delete": {
+        "tags": ["documents"],
+        "consumes": "application/json",
+        "produces": "application/json",
+        "summary": "Delete a document",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT access token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Doc id"
+          },
+          {
+            "in": "path",
+            "name": "user",
+            "description": "user name"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "properties": {
+              "password": {
+                "type": "string",
+                "example": "irumvaregis"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The document is deleted"
+          }
+        }
+      }
+    }
+  }
+}

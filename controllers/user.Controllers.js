@@ -9,7 +9,6 @@ const jwt = require("jsonwebtoken");
 const { cloudinary } = require("../config/cloudinary/cloudinary");
 
 const object = Joi.object({
-  name: Joi.string().min(5).max(100),
   email: Joi.string().min(3).email().max(200).required(),
   password: Joi.string().min(8).max(100).required(),
   number: Joi.string().required(),
@@ -40,15 +39,15 @@ const generateToken = (user) => {
 // User register
 const userRegister = async (req, res) => {
   try {
-    const { email, number, password, name } = req.body;
-    if (!email || !password || !number || !name) {
+    const { email, number, password } = req.body;
+    if (!email || !password || !number) {
       return res.status(400).send({ message: "All credentials are required!" });
     } else {
       const { error } = object.validate(req.body);
       if (error) {
         return res.status(400).send({ message: error.details[0].message });
       } else {
-        let sql = `SELECT * FROM users WHERE email = '${email}' OR number = '${number}'`;
+        let sql = `SELECT * FROM users WHERE email = '${email}' OR number = '${number}'`
         conn.query(sql, async (error, data) => {
           if (error) {
             return res
@@ -79,6 +78,7 @@ const userRegister = async (req, res) => {
                     .status(500)
                     .send({ message: "Internal server error..." });
                 } else {
+                  if(data.length !== 0) return res.send({message: 'User exists, verify to proceed...'})
                   // Save otp to database
                   const sql2 = `INSERT INTO otps (number, otp) VALUES ('${number}', '${hashedOtp}')`;
                   conn.query(sql2, async (error, data) => {
@@ -104,7 +104,7 @@ const userRegister = async (req, res) => {
                         } else {
                           const hashedPass = await bcrypt.hash(password, 10);
                           // Save user
-                          const sql = `INSERT INTO users (email, password, number, name) VALUES ('${email}', '${hashedPass}', '${number}', '${name}')`;
+                          const sql = `INSERT INTO users (email, password, number) VALUES ('${email}', '${hashedPass}', '${number}')`;
                           conn.query(sql, async (error, data) => {
                             if (error) {
                               return res
@@ -284,10 +284,11 @@ const loginUser = async (req, res) => {
       const sql = `SELECT * FROM users WHERE email = '${email}'`;
       conn.query(sql, async (error, data) => {
         if (error) {
+          console.log(error)
           return res.status(500).send({ message: "Internal server error..." });
         } else {
           if (data.length === 0) {
-            return res.status(404).send({ message: "User not found!" });
+            return res.status(401).send({ message: "User not found!" });
           }
           // Compare passwords
           const validPass = await bcrypt.compare(password, data[0].password);
@@ -313,7 +314,7 @@ const loginUser = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.log(error)
     return res.status(500).send({ message: "Internal server error..." });
   }
 };

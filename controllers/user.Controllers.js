@@ -50,7 +50,7 @@ const userRegister = async (req, res) => {
         let sql = `SELECT * FROM users WHERE email = '${email}' OR number = '${number}'`
         conn.query(sql, async (error, data) => {
           if (error) {
-            console.log(error)
+            console.log(error);
             return res
               .status(500)
               .send({ message: "Internal server error..." });
@@ -80,11 +80,9 @@ const userRegister = async (req, res) => {
                     .send({ message: "Internal server error..." });
                 } else {
                   if (data.length !== 0)
-                    return res
-                      .status(400)
-                      .send({
-                        message: "User already exists! Verify to proceed...",
-                      });
+                    return res.status(400).send({
+                      message: "User already exists! Verify to proceed...",
+                    });
                   // Save otp to database
                   const sql2 = `INSERT INTO otps (number, otp) VALUES ('${number}', '${hashedOtp}')`;
                   conn.query(sql2, async (error, data) => {
@@ -256,7 +254,7 @@ const verifyOtp = async (req, res) => {
 // Update user stats
 const updateUserStats = async (req, res) => {
   if (!user) {
-    return res.status(401).send({ message: "User not found!" });
+    return res.status(401).send({ message: "Not authorised!" });
   }
   try {
     let { position, church, language, idNumber, name } = req.body;
@@ -324,7 +322,7 @@ const loginUser = async (req, res) => {
           return res.status(500).send({ message: "Internal server error..." });
         } else {
           if (data.length === 0) {
-            return res.status(401).send({ message: "User not found!" });
+            return res.status(401).send({ message: "Not authorised!" });
           }
           // Compare passwords
           const validPass = await bcrypt.compare(password, data[0].password);
@@ -357,7 +355,7 @@ const loginUser = async (req, res) => {
 
 // Forgot password
 const forgotPassword = async (req, res) => {
-  if(!user) return res.status(400).send({message: 'User not found!'})
+  if (!user) return res.status(400).send({ message: "Not authorised!" });
   const number = req.body.number;
   if (!number) {
     return res.status(400).send({ message: "Please number is required!" });
@@ -448,7 +446,7 @@ const resetPassword = async (req, res) => {
       return res.status(500).send({ message: "Internal server error..." });
     } else {
       if (data.length === 0) {
-        return res.status(401).send({ message: "User not found!" });
+        return res.status(401).send({ message: "No user found!" });
       }
       // Verify otp
       const validOtp = await bcrypt.compare(otp, data[0].otp);
@@ -499,7 +497,7 @@ const resetPassword = async (req, res) => {
 // Upload profile picture
 const uploadPicture = async (req, res) => {
   if (!user) {
-    return res.status(401).send({ message: "User not found!" });
+    return res.status(401).send({ message: "Not authorised!" });
   }
   try {
     const sql = `SELECT * FROM users WHERE number = '${user.number}' AND email='${user.email}'`;
@@ -582,7 +580,7 @@ const profilePicRemove = async (req, res) => {
         return res.status(500).send({ message: "Internal server error..." });
       } else {
         if (data.length === 0) {
-          return res.status(401).send({ message: "User not found!" });
+          return res.status(401).send({ message: "No user found!" });
         } else {
           // require password
           const password = req.body.password;
@@ -614,7 +612,10 @@ const profilePicRemove = async (req, res) => {
                         .status(500)
                         .send({ message: "Internal server error..." });
                     } else {
-                      return res.status(201).send({ user: data[0], message:'Profile pic removed...' });
+                      return res.status(201).send({
+                        user: data[0],
+                        message: "Profile pic removed...",
+                      });
                     }
                   });
                 }
@@ -629,8 +630,10 @@ const profilePicRemove = async (req, res) => {
 
 // Get any user profile
 const getAnyUserProfile = async (req, res) => {
+  if (!user) return res.status(400).send({ message: "Not authorised" });
   // Get user from url
   const userName = req.params.user;
+
   // Get user from db
   const sql = `SELECT * FROM users WHERE name = '${userName}'`;
   conn.query(sql, async (error, data) => {
@@ -638,8 +641,11 @@ const getAnyUserProfile = async (req, res) => {
       return res.status(500).send({ message: "Internal server error..." });
     } else {
       if (data.length === 0) {
-        return res.status(401).send({ message: "User not found!" });
+        return res.status(401).send({ message: "No user found!" });
       }
+
+      if (data[0].number === user.number)
+        return res.status(400).send({ message: "Visit your profile!" });
       return res.status(201).send({
         user: data[0],
       });
@@ -650,7 +656,7 @@ const getAnyUserProfile = async (req, res) => {
 // Get my profile from token
 const getUserProfile = async (req, res) => {
   if (!user) {
-    return res.status(401).send({ message: "User not found!" });
+    return res.status(401).send({ message: "Not authorised!" });
   } else {
     return res.status(201).send({
       user,
@@ -661,16 +667,19 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   if (!user) {
-    return res.status(401).send({ message: "User not found!" });
+    return res.status(401).send({ message: "Not authorised!" });
   }
 
-  if(user.name !== req.params.user) return res.status(400).send({message: 'Not authorised to perform this action!'})
+  if (user.name !== req.params.user)
+    return res
+      .status(400)
+      .send({ message: "Not authorised to perform this action!" });
   // Get username from url
   const userName = req.params.user;
   // compare with the token username
   if (userName !== user.name) {
     return res.status(401).send({
-      message: "User not found!",
+      message: "Not authorised!",
     });
   } else {
     const newUsername = req.body.username ? req.body.username : user.name;
@@ -701,7 +710,7 @@ const updateProfile = async (req, res) => {
                 .status(500)
                 .send({ message: "Internal server error..." });
             if (data.length === 0)
-              return res.status(401).send({ message: "User not found!" });
+              return res.status(401).send({ message: "No user found!" });
             return res.status(201).send({
               user: data[0],
               message: "User profile data updated successfully!",
@@ -717,7 +726,7 @@ const updateProfile = async (req, res) => {
 // Delete user profile
 const deleteMyAccount = async (req, res) => {
   if (!user) {
-    return res.status(401).send({ message: "User not found!" });
+    return res.status(401).send({ message: "Not authorised!" });
   }
   // user from url
   const userName = req.params.user;
@@ -758,9 +767,8 @@ const getTotalWorkers = async (req, res) => {
   // get users number
   const sql = `SELECT * FROM users`;
   conn.query(sql, (error, data) => {
-
     if (error) {
-      console.log(error)
+      console.log(error);
       return res.status(500).send({ message: "Internal server error..." });
     } else {
       return res.status(201).send({
@@ -777,7 +785,7 @@ const getPastors = async (req, res) => {
   const sql = `SELECT * FROM users WHERE position = 'pastor'`;
   conn.query(sql, (error, data) => {
     if (error) {
-      console.log(error)
+      console.log(error);
       return res.status(500).send({ message: "Internal server error..." });
     } else {
       return res.status(201).send({
@@ -790,7 +798,7 @@ const getPastors = async (req, res) => {
 
 // Change user password
 const passwordChange = async (req, res) => {
-  if (!user) return res.status(401).send({ message: "User not found!" });
+  if (!user) return res.status(401).send({ message: "Not authorised!" });
   // Get user from the url
   const userName = req.params.user;
   // Compare to token
@@ -826,7 +834,7 @@ const passwordChange = async (req, res) => {
           // console.log(error)
           return res.status(500).send({ message: "Internal server error..." });
         if (data.length === 0)
-          return res.status(401).send({ message: "User not found!" });
+          return res.status(401).send({ message: "No user found!" });
         return res
           .status(201)
           .send({ message: "Password updated successfully!", user: data[0] });
@@ -838,6 +846,39 @@ const passwordChange = async (req, res) => {
       .send({ message: "Not authorised to perform this action!" });
   }
 };
+
+const searchUser = async (req, res) => {
+  if (!user) return res.status(400).send({ message: "Not authorised!" });
+  const { search } = req.query;
+
+  if (!search) {
+    // Get users in the same church
+    const sql = `SELECT * FROM users WHERE church ='${user.church}'`;
+    conn.query(sql, async (err, data) => {
+      if (err)
+        return res.status(500).send({ message: "Internal server error..." });
+      if (data.length === 0)
+        return res.status(400).send({ message: "Search users!" });
+      if (data[0].number === user.number)
+        return res.status(400).send({ message: "Visit your profile!" });
+      return res.status(200).send(data);
+    });
+  } else {
+    // Get searched user
+    const sql = `SELECT * FROM users WHERE name LIKE '%${search}%' OR email LIKE '%${search}%'`;
+    conn.query(sql, async (err, data) => {
+      if (err)
+        return res.status(500).send({ message: "Internal server error..." });
+      if (data.length === 0)
+        return res.status(400).send({ message: "No user found!" });
+      return res.status(200).send(data);
+    });
+  }
+};
+
+
+
+
 
 module.exports = {
   userRegister,
@@ -855,4 +896,5 @@ module.exports = {
   getTotalWorkers,
   getPastors,
   passwordChange,
+  searchUser,
 };

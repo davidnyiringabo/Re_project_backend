@@ -25,6 +25,14 @@ const conn = mysql.createConnection({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+// Fileuploader
+app.use(
+  fileUploader({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
+
 // Connect database
 connectDatabase(); // MongoDB
 connectDB(); // MySQL
@@ -93,18 +101,29 @@ app.post("/api/docs/:user/create", protect, (req, res) => {
   });
 });
 
+/* ----------------------------------------------------------- */
+
+/* Download the document */
+app.get("/api/docs/:user/doc/:id/download", protect, (req, res) => {
+  const sql = `SELECT * FROM documents WHERE id='${req.params.id}'`;
+  conn.query(sql, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).send({ message: "Error downloading file" });
+    }
+    if (result.length === 0)
+      return res.status(400).send({ message: "Document not found!" });
+    const path = result[0].path;
+    return res.status(201).download(path);
+  });
+});
+
+/* ---------------------------------------------------------------- */
+
 app.use("/api/docs", documentRouter);
 
 // Use cors
 app.use(cors());
-
-// Fileuploader
-app.use(
-  fileUploader({
-    useTempFiles: true,
-    tempFileDir: "/tmp/",
-  })
-);
 
 // user apis
 app.use("/api/users", userRouter);
@@ -117,4 +136,44 @@ app.use("/api/chat", require("./routes/chat.routes"));
 
 const server = app.listen(process.env.PORT, () => {
   console.log(`server listening port ${process.env.PORT}`);
+});
+
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("connected");
+
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    socket.emit("connected");
+  });
+
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    console.log(`User joined room ${room}`);
+  });
+
+  socket.on("typing", (room) => socket.in(room).emit("typing"));
+
+  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+
+  socket.on("new message", (newMsgReceived) => {
+    var chat = newMsgReceived.chat;
+
+    if (!chat.users) return console.log("Chat users not defined!");
+    chat.users.forEach((user) => {
+      if (user._id === newMsgReceived.sender._id) return;
+      socket.in(user._id).emit("message received", newMsgReceived);
+    });
+
+    socket.off("setup", (userData) => {
+      console.log("disconnected");
+      socket.leave(userData._id);
+    });
+  });
 });

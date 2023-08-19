@@ -88,6 +88,7 @@ userRouter.get("/workers/pastors", getPastors);
 userRouter.put("/:user/profile/password/change", protect, passwordChange);
 
 // Search user
-userRouter.post("/search", protect, searchUser);
+// this should be a get request not a post request at all
+userRouter.get("/search", protect, searchUser);
 
 module.exports = userRouter;

@@ -33,6 +33,8 @@ const protect = async (req, res, next) => {
               .send({ message: "Internal server error..." });
           } else {
             user = data[0];
+            console.log(user)
+            req.user = user;
             next();
           }
         });

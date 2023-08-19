@@ -66,14 +66,15 @@ app.post("/api/docs/:user/create", protect, (req, res) => {
     return res.status(404).send({ message: "Cannot perform this action!" });
   // upload a word document
 
+  // console.log(req.file)
   upload(req, res, (err) => {
     if (err) {
       console.log(err);
       return res.status(400).send({ message: "Error uploading file" });
     }
-
+    console.log(req.body, req.files)
     // Save the link to database
-    const path = __dirname + "\\" + req.file.path;
+    // const path = __dirname + "\\" + req.file.path;
     const receiver = req.body.receiver;
     const reporter = req.params.user;
     const details = req.body.details;
@@ -123,7 +124,10 @@ app.get("/api/docs/:user/doc/:id/download", protect, (req, res) => {
 app.use("/api/docs", documentRouter);
 
 // Use cors
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', "https://re-project-frontend.vercel.app"],
+  credentials: true
+}));
 
 // user apis
 app.use("/api/users", userRouter);

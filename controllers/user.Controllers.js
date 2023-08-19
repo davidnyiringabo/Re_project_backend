@@ -103,7 +103,8 @@ const userRegister = async (req, res) => {
                             .send({ message: "Internal server error..." });
                         } else {
                           // Get user
-                          const sql = `SELECT * FROM users WHERE email = '${email}' AND number = '${number}'`;
+                          // const sql = `SELECT * FROM users WHERE email = '${email}' AND number = '${number}'`;
+                          const sql = `SELECT * FROM users WHERE email = '${email}'`;
                           conn.query(sql, (error, data) => {
                             if (error) {
                               console.log(error);
@@ -123,6 +124,7 @@ const userRegister = async (req, res) => {
                       });
                       try {
                         // Send otp
+
                         const message = await twilio.messages.create({
                           from: "+12765985304",
                           to: number,
@@ -146,7 +148,7 @@ const userRegister = async (req, res) => {
                                 .send({ message: "Internal server error..." });
                             } else {
                               // Get user
-                              const sql = `SELECT * FROM users WHERE email = '${email}' AND number = '${number}'`;
+                              const sql = `SELECT * FROM users WHERE email = '${email}'`;
                               conn.query(sql, (error, data) => {
                                 if (error) {
                                   console.log(error);
@@ -252,7 +254,9 @@ const verifyOtp = async (req, res) => {
 };
 
 // Update user stats
-const updateUserStats = async (req, res) => {
+const updateUserStats = async (req,res) => {
+  const user = req.user
+  console.log(user)
   if (!user) {
     return res.status(401).send({ message: "Not authorised!" });
   }
@@ -332,17 +336,17 @@ const loginUser = async (req, res) => {
               .send({ message: "Email or Password invalid!" });
           } else {
             // Check if user verified
-            if (data[0].verified === "False") {
-              return res
-                .status(401)
-                .send({ message: "Verify account to proceed..." });
-            } else {
+            // if (data[0].verified === "False" || data[0].verified !== "False") {
+            //   return res
+            //     .status(401)
+            //     .send({ message: "Verify account to proceed..." });
+            // } else {
               return res.status(201).send({
                 user: data[0],
                 token: generateToken(data[0]),
                 message: "User logged in successfully!",
               });
-            }
+            // }
           }
         }
       });
@@ -669,7 +673,7 @@ const updateProfile = async (req, res) => {
   if (!user) {
     return res.status(401).send({ message: "Not authorised!" });
   }
-
+  console.log(req.params.user, user.name)
   if (user.name !== req.params.user)
     return res
       .status(400)
@@ -689,12 +693,12 @@ const updateProfile = async (req, res) => {
     const church = req.body.position ? req.body.church : user.church;
 
     // Confirm using password
-    const password = req.body.password;
-    if (!password || !(await bcrypt.compare(password, user.password))) {
-      return res
-        .status(403)
-        .send({ message: "Confirm password to proceed..." });
-    } else {
+    // const password = req.body.password;
+    // if (!password || !(await bcrypt.compare(password, user.password))) {
+    //   return res
+    //     .status(403)
+    //     .send({ message: "Confirm password to proceed..." });
+    // } else {
       // Update the user profile
       const sql = `UPDATE users SET name = '${newUsername}', email='${newEmail}' , number='${newNumber}' , church ='${church}', position='${newposition}' WHERE name = '${user.name}' AND number='${user.number}'`;
       conn.query(sql, async (error) => {
@@ -713,13 +717,13 @@ const updateProfile = async (req, res) => {
               return res.status(401).send({ message: "No user found!" });
             return res.status(201).send({
               user: data[0],
-              message: "User profile data updated successfully!",
+              message: "User Data updated successfully!",
               token: generateToken(data[0]),
             });
           });
         }
       });
-    }
+    // }
   }
 };
 
